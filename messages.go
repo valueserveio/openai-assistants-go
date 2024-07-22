@@ -1,7 +1,6 @@
 package openaiassistantsgo
 
 import (
-	"encoding/json"
 	"fmt"
 	"io"
 	"log"
@@ -10,15 +9,19 @@ import (
 	"strings"
 )
 
-// Assistants interact with Threads. Threads contain messages.
+// Users create Messages, Messages are a part of Threads.
 
-func CreateThread() (string) {
+func CreateUserMessage(thread_id string, prompt string) {
 	client := &http.Client{}
 
-  var thread_id string
-	var data = strings.NewReader(``)
+	var data = strings.NewReader(fmt.Sprintf(`{
+      "role": "user",
+      "content": "%s"
+    }`, prompt))
 
-	req, err := http.NewRequest("POST", "https://api.openai.com/v1/threads", data)
+    fmt.Println(data)
+
+	req, err := http.NewRequest("POST", fmt.Sprintf("https://api.openai.com/v1/threads/%s/messages", thread_id), data)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -39,35 +42,13 @@ func CreateThread() (string) {
 		log.Fatal(err)
 	}
 
-	var b interface{}
-	if err := json.Unmarshal(bodyText, &b); err != nil {
-		log.Fatal(err)
-	}
-
-	m := b.(map[string]interface{})
-
-	for k, v := range m {
-		if k == "id" {
-      thread_id = v.(string)
-      return thread_id
-			fmt.Println(v)
-		}
-
-		if k == "tool_resources" {
-			fmt.Println(v)
-		}
-	}
-
 	fmt.Printf("%s\n", bodyText)
-  return ""
-
 }
 
-func DeleteThread(id string) {
-
+func ListMessages(thread_id string) {
   client := &http.Client{}
 
-	req, err := http.NewRequest("DELETE", fmt.Sprintf("https://api.openai.com/v1/threads/%s", id), nil)
+	req, err := http.NewRequest("GET", fmt.Sprintf("https://api.openai.com/v1/threads/%s/messages", thread_id), nil)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -90,3 +71,4 @@ func DeleteThread(id string) {
 
 	fmt.Printf("%s\n", bodyText)
 }
+

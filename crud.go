@@ -10,10 +10,11 @@ import (
   "strings"
 )
 
-func CreateAssistant(instructions string) {
+func CreateAssistant(instructions string) (string, error) {
 
   client := &http.Client{}
   var assistant_instructions string
+  var assistant_id string
 
   if instructions != "" {
     assistant_instructions = instructions
@@ -31,6 +32,7 @@ func CreateAssistant(instructions string) {
   req, err := http.NewRequest("POST", "https://api.openai.com/v1/assistants", data)
   if err != nil {
     log.Fatal(err)
+    return "", err
   }
 
   req.Header.Set("Content-Type", "application/json")
@@ -40,6 +42,7 @@ func CreateAssistant(instructions string) {
   resp, err := client.Do(req)
   if err != nil {
     log.Fatal(err)
+    return "", err
   }
 
   defer resp.Body.Close()
@@ -48,11 +51,13 @@ func CreateAssistant(instructions string) {
 
   if err != nil {
     log.Fatal(err)
+    return "", err
   }
 
   var b interface{}
   if err := json.Unmarshal(bodyText, &b); err != nil {
     log.Fatal(err)
+    return "", err
   }
 
   m := b.(map[string]interface{})
@@ -60,6 +65,8 @@ func CreateAssistant(instructions string) {
   for k, v := range m {
     if k == "id" {
       fmt.Println(v)
+      assistant_id = v.(string)
+      return assistant_id, nil
     }
 
     if k == "tool_resources" {
@@ -67,7 +74,9 @@ func CreateAssistant(instructions string) {
     }
   }
 
-  //fmt.Printf("%s\n", bodyText)
+  fmt.Printf("%s\n", bodyText)
+  return assistant_id, nil
+
 
 }
 
