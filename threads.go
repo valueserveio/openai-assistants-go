@@ -12,7 +12,7 @@ import (
 
 // Assistants interact with Threads. Threads contain messages.
 
-func CreateThread() (string) {
+func CreateThread() (string, error) {
 	client := &http.Client{}
 
   var thread_id string
@@ -30,6 +30,7 @@ func CreateThread() (string) {
 	resp, err := client.Do(req)
 	if err != nil {
 		log.Fatal(err)
+    return "", err
 	}
 
 	defer resp.Body.Close()
@@ -37,6 +38,7 @@ func CreateThread() (string) {
 	bodyText, err := io.ReadAll(resp.Body)
 	if err != nil {
 		log.Fatal(err)
+    return "", err
 	}
 
 	var b interface{}
@@ -49,8 +51,8 @@ func CreateThread() (string) {
 	for k, v := range m {
 		if k == "id" {
       thread_id = v.(string)
-      return thread_id
 			fmt.Println(v)
+      return thread_id, nil
 		}
 
 		if k == "tool_resources" {
@@ -59,17 +61,18 @@ func CreateThread() (string) {
 	}
 
 	fmt.Printf("%s\n", bodyText)
-  return ""
+  return "ID was not found", nil
 
 }
 
-func DeleteThread(id string) {
+func DeleteThread(id string) error {
 
   client := &http.Client{}
 
 	req, err := http.NewRequest("DELETE", fmt.Sprintf("https://api.openai.com/v1/threads/%s", id), nil)
 	if err != nil {
 		log.Fatal(err)
+    return err
 	}
 
 	req.Header.Set("Content-Type", "application/json")
@@ -79,6 +82,7 @@ func DeleteThread(id string) {
 	resp, err := client.Do(req)
 	if err != nil {
 		log.Fatal(err)
+    return err
 	}
 
 	defer resp.Body.Close()
@@ -86,7 +90,9 @@ func DeleteThread(id string) {
 	bodyText, err := io.ReadAll(resp.Body)
 	if err != nil {
 		log.Fatal(err)
+    return err
 	}
 
 	fmt.Printf("%s\n", bodyText)
+  return nil
 }
