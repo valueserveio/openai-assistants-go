@@ -10,7 +10,7 @@ import (
   "strings"
 )
 
-func CreateAssistant(instructions string) (string, error) {
+func CreateAssistant(instructions string, store_id string) (string, error) {
 
   client := &http.Client{}
   var assistant_instructions string
@@ -25,9 +25,16 @@ func CreateAssistant(instructions string) (string, error) {
   var data = strings.NewReader(fmt.Sprintf(`{
     "instructions": "%s",
     "name": "Test Assistant",
-    "tools": [{"type": "file_search"}],
-    "model": "gpt-4o"
-  }`, assistant_instructions))
+    "tools": [
+      {"type": "file_search"}
+    ],
+    "model": "gpt-4o",
+    "tool_resources": {
+      "file_search": {
+        "vector_store_ids": ["%s"]
+      }
+    }
+  }`, assistant_instructions, store_id))
 
   req, err := http.NewRequest("POST", "https://api.openai.com/v1/assistants", data)
   if err != nil {

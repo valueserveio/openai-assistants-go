@@ -12,9 +12,6 @@ import (
 	"path/filepath"
 )
 
-//TODO: Files endpoint for uploading files. (outputs file ids)
-// TODO: Vector Storage for storing references to those files to be used with "file_search"
-
 func DeleteFile(file_id string) error {
 
 	client := &http.Client{}
@@ -42,8 +39,8 @@ func DeleteFile(file_id string) error {
   return nil
 }
 
-func ListFiles() ([]string, error) {
-	var file_ids []string
+func ListFiles() ([]interface{}, error) {
+	var file_ids []interface{}
 
 	client := &http.Client{}
 	req, err := http.NewRequest("GET", "https://api.openai.com/v1/files", nil)
@@ -75,9 +72,10 @@ func ListFiles() ([]string, error) {
 
 	m := b.(map[string]interface{})
 
+  // TODO: Actually handle getting the individual file ID's and returning them. 
 	for k, v := range m {
-		if k == "id" {
-			file_ids = append(file_ids, v.(string))
+		if k == "data" {
+			file_ids = append(file_ids, v.([]interface{}))
 			fmt.Println(v)
 		}
 	}
