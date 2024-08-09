@@ -24,19 +24,19 @@ func DeleteFile(file_id string) error {
 
 	resp, err := client.Do(req)
 	if err != nil {
-    return err
+		return err
 	}
 
 	defer resp.Body.Close()
 
 	bodyText, err := io.ReadAll(resp.Body)
 	if err != nil {
-    return err
+		return err
 	}
 
 	fmt.Printf("%s\n", bodyText)
 
-  return nil
+	return nil
 }
 
 func ListFiles() ([]interface{}, error) {
@@ -72,7 +72,7 @@ func ListFiles() ([]interface{}, error) {
 
 	m := b.(map[string]interface{})
 
-  // TODO: Actually handle getting the individual file ID's and returning them. 
+	// TODO: Actually handle getting the individual file ID's and returning them.
 	for k, v := range m {
 		if k == "data" {
 			file_ids = append(file_ids, v.([]interface{}))
@@ -85,7 +85,7 @@ func ListFiles() ([]interface{}, error) {
 	return file_ids, nil
 }
 
-func UploadFile(filename string) (string, error) {
+func UploadFile(filename string) (AIFileUploadResponse, error) {
 	form := new(bytes.Buffer)
 	writer := multipart.NewWriter(form)
 	formField, err := writer.CreateFormField("purpose")
@@ -118,7 +118,7 @@ func UploadFile(filename string) (string, error) {
 	req, err := http.NewRequest("POST", "https://api.openai.com/v1/files", form)
 	if err != nil {
 		log.Fatal(err)
-		return "", err
+		return AIFileUploadResponse{}, err
 	}
 
 	req.Header.Set("Authorization", "Bearer "+os.Getenv("OPENAI_API_KEY"))
@@ -127,7 +127,7 @@ func UploadFile(filename string) (string, error) {
 	resp, err := client.Do(req)
 	if err != nil {
 		log.Fatal(err)
-		return "", err
+		return AIFileUploadResponse{}, err
 	}
 
 	defer resp.Body.Close()
@@ -135,26 +135,17 @@ func UploadFile(filename string) (string, error) {
 	bodyText, err := io.ReadAll(resp.Body)
 	if err != nil {
 		log.Fatal(err)
-		return "", err
+		return AIFileUploadResponse{}, err
 	}
 
-	var b interface{}
+	var b AIFileUploadResponse
 
 	if err := json.Unmarshal(bodyText, &b); err != nil {
 		log.Fatal(err)
 	}
 
-	var file_id string
-	m := b.(map[string]interface{})
-
-	for k, v := range m {
-		if k == "id" {
-			file_id = v.(string)
-			return file_id, nil
-		}
-	}
 	fmt.Printf("%s\n", bodyText)
 
-	return "File ID not found.", nil
+	return b, nil
 
 }
