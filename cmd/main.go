@@ -36,10 +36,10 @@ func main() {
 
 	fmt.Println(file_id)
 
-  if err := openaiassistantsgo.AttachFileToVectorStore(file_id, store_id); err != nil {
-    log.Fatal(err)
-  }
-  
+	if err := openaiassistantsgo.AttachFileToVectorStore(file_id.ID, store_id); err != nil {
+		log.Fatal(err)
+	}
+
 	thread_id, err := openaiassistantsgo.CreateThread()
 	if err != nil {
 		log.Fatal(err)

@@ -64,15 +64,16 @@ func CreateUserMessage(thread_id string, prompt string) (string, error) {
 	}
 
 	fmt.Printf("%s\n", bodyText)
-  return "Message ID not found.", err
+	return "Message ID not found.", err
 }
 
-func ListMessages(thread_id string) {
+func ListMessages(thread_id string) (string, error) {
 	client := &http.Client{}
 
 	req, err := http.NewRequest("GET", fmt.Sprintf("https://api.openai.com/v1/threads/%s/messages", thread_id), nil)
 	if err != nil {
 		log.Fatal(err)
+		return "", err
 	}
 
 	req.Header.Set("Content-Type", "application/json")
@@ -82,6 +83,7 @@ func ListMessages(thread_id string) {
 	resp, err := client.Do(req)
 	if err != nil {
 		log.Fatal(err)
+		return "", err
 	}
 
 	defer resp.Body.Close()
@@ -89,7 +91,9 @@ func ListMessages(thread_id string) {
 	bodyText, err := io.ReadAll(resp.Body)
 	if err != nil {
 		log.Fatal(err)
+		return "", err
 	}
 
 	fmt.Printf("%s\n", bodyText)
+	return string(bodyText), nil
 }
