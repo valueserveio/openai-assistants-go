@@ -10,6 +10,37 @@ import (
 	"strings"
 )
 
+type Messages struct {
+	Object  string    `json:"object"`
+	Data    []Message `json:"data"`
+	FirstID string    `json:"first_id"`
+	LastID  string    `json:"last_id"`
+	HasMore bool      `json:"has_more"`
+}
+
+type Message struct {
+	ID          string                 `json:"id"`
+	Object      string                 `json:"object"`
+	CreatedAt   int64                  `json:"created_at"`
+	AssistantID string                 `json:"assistant_id"`
+	ThreadID    string                 `json:"thread_id"`
+	RunID       string                 `json:"run_id"`
+	Role        string                 `json:"role"`
+	Content     []ContentItem          `json:"content"`
+	Attachments []interface{}          `json:"attachments"`
+	Metadata    map[string]interface{} `json:"metadata"`
+}
+
+type ContentItem struct {
+	Type string      `json:"type"`
+	Text TextContent `json:"text"`
+}
+
+type TextContent struct {
+	Value       string        `json:"value"`
+	Annotations []interface{} `json:"annotations"`
+}
+
 // Users create Messages, Messages are a part of Threads.
 
 func CreateUserMessage(thread_id string, prompt string) (string, error) {
@@ -67,7 +98,7 @@ func CreateUserMessage(thread_id string, prompt string) (string, error) {
 	return "Message ID not found.", err
 }
 
-func ListMessages(thread_id string) (string, error) {
+func ListMessagesBak(thread_id string) (string, error) {
 	client := &http.Client{}
 
 	req, err := http.NewRequest("GET", fmt.Sprintf("https://api.openai.com/v1/threads/%s/messages", thread_id), nil)
@@ -96,4 +127,78 @@ func ListMessages(thread_id string) (string, error) {
 
 	fmt.Printf("%s\n", bodyText)
 	return string(bodyText), nil
+}
+
+func ListMessages(thread_id string) (*Messages, error) {
+	client := &http.Client{}
+	req, err := http.NewRequest("GET", fmt.Sprintf("https://api.openai.com/v1/threads/%s/messages", thread_id), nil)
+	if err != nil {
+		return nil, fmt.Errorf("error creating request: %w", err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", "Bearer "+os.Getenv("OPENAI_API_KEY"))
+	req.Header.Set("OpenAI-Beta", "assistants=v2")
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("error sending request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("API request failed with status code: %d", resp.StatusCode)
+	}
+
+	bodyText, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("error reading response body: %w", err)
+	}
+
+	var messages Messages
+	err = json.Unmarshal(bodyText, &messages)
+	if err != nil {
+		return nil, fmt.Errorf("error unmarshaling response: %w", err)
+	}
+
+	// Print the parsed messages (optional)
+	fmt.Printf("Parsed Messages: %+v\n", messages)
+
+	return &messages, nil
+}
+
+func GetMessage(threadID, messageID string) (*Message, error) {
+	client := &http.Client{}
+	url := fmt.Sprintf("https://api.openai.com/v1/threads/%s/messages/%s", threadID, messageID)
+
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return nil, fmt.Errorf("error creating request: %w", err)
+	}
+
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", "Bearer "+os.Getenv("OPENAI_API_KEY"))
+	req.Header.Set("OpenAI-Beta", "assistants=v2")
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("error sending request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("API request failed with status code: %d", resp.StatusCode)
+	}
+
+	bodyText, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("error reading response body: %w", err)
+	}
+
+	var message Message
+	err = json.Unmarshal(bodyText, &message)
+	if err != nil {
+		return nil, fmt.Errorf("error unmarshaling response: %w", err)
+	}
+
+	return &message, nil
 }
