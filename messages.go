@@ -18,8 +18,7 @@ func CreateUserMessage(thread_id string, prompt string) (string, error) {
 
 	var data = strings.NewReader(fmt.Sprintf(`{
       "role": "user",
-      "content": "%s",
-      "response_format": { "type": "json_object" }
+      "content": "%s"
     }`, prompt))
 
 	fmt.Println(data)
