@@ -18,8 +18,7 @@ func CreateRun(assistant_id string, thread_id string) (string, error) {
 	client := &http.Client{}
 
 	var data = strings.NewReader(fmt.Sprintf(`{
-    "assistant_id": "%s",
-    "response_format": { "type": "json_object" }
+    "assistant_id": "%s"
   }`, assistant_id))
 
 	req, err := http.NewRequest("POST", fmt.Sprintf("https://api.openai.com/v1/threads/%s/runs", thread_id), data)
