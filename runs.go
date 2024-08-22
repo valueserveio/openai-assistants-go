@@ -18,7 +18,8 @@ func CreateRun(assistant_id string, thread_id string) (string, error) {
 	client := &http.Client{}
 
 	var data = strings.NewReader(fmt.Sprintf(`{
-    "assistant_id": "%s"
+    "assistant_id": "%s",
+    "response_format": { "type": "json_object" }
   }`, assistant_id))
 
 	req, err := http.NewRequest("POST", fmt.Sprintf("https://api.openai.com/v1/threads/%s/runs", thread_id), data)
@@ -64,8 +65,7 @@ func CreateRun(assistant_id string, thread_id string) (string, error) {
 func GetRunStatus(run_id string, thread_id string) (string, error) {
 
 	client := &http.Client{}
-  var run_status string
-
+	var run_status string
 
 	req, err := http.NewRequest("GET", fmt.Sprintf("https://api.openai.com/v1/threads/%s/runs/%s", thread_id, run_id), nil)
 	if err != nil {
@@ -103,5 +103,5 @@ func GetRunStatus(run_id string, thread_id string) (string, error) {
 	}
 
 	fmt.Printf("%s\n", bodyText)
-  return "Run Status not found.", nil
+	return "Run Status not found.", nil
 }
