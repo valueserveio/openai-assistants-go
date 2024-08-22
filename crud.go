@@ -33,8 +33,7 @@ func CreateAssistant(instructions string, store_id string) (string, error) {
       "file_search": {
         "vector_store_ids": ["%s"]
       }
-    },
-    "response_format": { "type": "json_object" }
+    }
   }`, assistant_instructions, store_id))
 
 	req, err := http.NewRequest("POST", "https://api.openai.com/v1/assistants", data)
