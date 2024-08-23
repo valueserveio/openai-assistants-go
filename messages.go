@@ -41,16 +41,16 @@ type TextContent struct {
 	Annotations []interface{} `json:"annotations"`
 }
 
-// Users create Messages, Messages are a part of Threads.
+// Users or System create Messages, Messages are a part of Threads.
 
-func CreateUserMessage(thread_id string, prompt string) (string, error) {
+func CreateMessage(thread_id string, prompt string, role string) (string, error) {
 	client := &http.Client{}
 	var message_id string
 
 	var data = strings.NewReader(fmt.Sprintf(`{
-      "role": "user",
+      "role": "%s",
       "content": "%s"
-    }`, prompt))
+    }`, role, prompt))
 
 	fmt.Println(data)
 
