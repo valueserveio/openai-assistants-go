@@ -28,7 +28,7 @@ func CreateAssistant(instructions string, store_id string) (string, error) {
     "tools": [
       {"type": "file_search"}
     ],
-    "model": "gpt-4o",
+    "model": "gpt-4o-mini",
     "tool_resources": {
       "file_search": {
         "vector_store_ids": ["%s"]
