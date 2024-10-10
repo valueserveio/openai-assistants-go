@@ -41,20 +41,30 @@ type TextContent struct {
 	Annotations []interface{} `json:"annotations"`
 }
 
+type MessagePayload struct {
+	Role    string `json:"role"`
+	Content string `json:"content"`
+}
+
 // Users or System create Messages, Messages are a part of Threads.
 
 func CreateMessage(thread_id string, prompt string, role string) (string, error) {
 	client := &http.Client{}
 	var message_id string
 
-	var data = strings.NewReader(fmt.Sprintf(`{
-      "role": "%s",
-      "content": "%s"
-    }`, role, prompt))
+	payload := MessagePayload{
+		Role:    role,
+		Content: prompt,
+	}
 
-	fmt.Println(data)
+	data, err := json.Marshal(payload)
+	if err != nil {
+		log.Fatal(err)
+	}
 
-	req, err := http.NewRequest("POST", fmt.Sprintf("https://api.openai.com/v1/threads/%s/messages", thread_id), data)
+	fmt.Println(string(data))
+
+	req, err := http.NewRequest("POST", fmt.Sprintf("https://api.openai.com/v1/threads/%s/messages", thread_id), bytes.NewBuffer(data))
 	if err != nil {
 		log.Fatal(err)
 	}
