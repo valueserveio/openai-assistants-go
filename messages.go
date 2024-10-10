@@ -1,13 +1,13 @@
 package openaiassistantsgo
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
 	"log"
 	"net/http"
 	"os"
-	"strings"
 )
 
 type Messages struct {
