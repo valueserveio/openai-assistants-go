@@ -1,0 +1,30 @@
+{
+  "name": "get_assistant_response",
+  "description": "Generates a structured response with a result status and associated data.",
+  "schema": {
+    "type": "object",
+    "properties": {
+      "result": {
+        "type": "string",
+        "enum": ["success", "failure"],
+        "description": "The outcome of the assistant's operation."
+      },
+      "data": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string",
+            "description": "A key representing the data attribute."
+          },
+          "value": {
+            "type": "string",
+            "description": "The value corresponding to the key."
+          }
+        },
+        "required": ["key", "value"],
+        "description": "An object containing key-value pairs of data."
+      }
+    },
+    "required": ["result", "data"]
+  }
+}

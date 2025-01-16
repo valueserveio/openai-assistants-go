@@ -10,7 +10,86 @@ import (
 	"strings"
 )
 
-func CreateAssistant(instructions string, store_id string) (string, error) {
+func CreateAssistant(instructions string, storeID string, schemaFilePath string) (string, error) {
+	client := &http.Client{}
+	var assistantInstructions string
+	var assistantID string
+
+	if instructions != "" {
+		assistantInstructions = instructions
+	} else {
+		assistantInstructions = "You are a business value assistant specializing in structured JSON outputs."
+	}
+
+	// Load the schema from the file using os and io packages
+	file, err := os.Open(schemaFilePath)
+	if err != nil {
+		return "", fmt.Errorf("error opening schema file: %w", err)
+	}
+	defer file.Close()
+
+	schemaData, err := io.ReadAll(file)
+	if err != nil {
+		return "", fmt.Errorf("error reading schema file: %w", err)
+	}
+
+	// Build the request payload
+	data := fmt.Sprintf(`{
+		"instructions": "%s",
+		"name": "Test Assistant with Structured Outputs",
+		"tools": [
+			{"type": "file_search"}
+		],
+		"model": "gpt-4o-mini",
+		"tool_resources": {
+			"file_search": {
+				"vector_store_ids": ["%s"]
+			}
+		},
+		"response_format": {
+      "type": "json_schema",
+      "json_schema": %s
+	}
+}`, assistantInstructions, storeID, string(schemaData))
+
+  // fmt.Println(data)
+
+	req, err := http.NewRequest("POST", "https://api.openai.com/v1/assistants", strings.NewReader(data))
+	if err != nil {
+		return "", fmt.Errorf("error creating request: %w", err)
+	}
+
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", "Bearer "+os.Getenv("OPENAI_API_KEY"))
+	req.Header.Set("OpenAI-Beta", "assistants=v2")
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return "", fmt.Errorf("error sending request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	bodyText, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return "", fmt.Errorf("error reading response body: %w", err)
+	}
+
+	var response map[string]interface{}
+	if err := json.Unmarshal(bodyText, &response); err != nil {
+		return "", fmt.Errorf("error unmarshaling response: %w", err)
+	}
+
+	if id, ok := response["id"].(string); ok {
+		assistantID = id
+		return assistantID, nil
+	}
+
+  // Useful when trying to troubleshoot schema
+  // fmt.Println("Create Assistant Response: ", response)
+
+	return "", fmt.Errorf("assistant ID not found in response: %s", string(bodyText))
+}
+func CreateAssistantBak(instructions string, store_id string) (string, error) {
 
 	client := &http.Client{}
 	var assistant_instructions string
@@ -86,12 +165,13 @@ func CreateAssistant(instructions string, store_id string) (string, error) {
 
 }
 
-func DeleteAssistant(id string) {
+func DeleteAssistant(id string) error {
 	client := &http.Client{}
 	req, err := http.NewRequest("DELETE", fmt.Sprintf("https://api.openai.com/v1/assistants/%s", id), nil)
 
 	if err != nil {
 		log.Fatal(err)
+    return err
 	}
 
 	req.Header.Set("Content-Type", "application/json")
@@ -101,6 +181,7 @@ func DeleteAssistant(id string) {
 	resp, err := client.Do(req)
 	if err != nil {
 		log.Fatal(err)
+    return err
 	}
 
 	defer resp.Body.Close()
@@ -108,9 +189,11 @@ func DeleteAssistant(id string) {
 
 	if err != nil {
 		log.Fatal(err)
+    return err
 	}
 
 	fmt.Printf("%s\n", bodyText)
+  return nil
 }
 
 func ListAssistants() {
